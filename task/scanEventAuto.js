@@ -7,7 +7,7 @@ const IGNORE_EVENT = ['Initialized', 'AdminWithdrawToken', 'AdminWithdrawNFT', '
 const util = require('util')
 const Web3 = require('web3')
 
-const web3 = new Web3(ENVConfig.provider)
+const web3 = new Web3(ENVConfig.provider_scan || ENVConfig.provider)
 const asyncdb = require('../utils/mysqlUtil')
 
 function sleep(ms) {

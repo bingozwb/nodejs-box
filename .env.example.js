@@ -8,6 +8,7 @@ module.exports = {
   addr: addr,
   pk: '',
   provider: 'http://localhost:8545',
+  provider_scan: 'http://localhost:8545',
   chain_id: 0,
 
   db: {
