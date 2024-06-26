@@ -2,7 +2,7 @@ ENVConfig = require("../.env." + process.env.chain)
 
 const ABI = require('../abi/abi')
 const IGNORE_ABI = []
-const IGNORE_EVENT = ['Initialized', 'AdminWithdrawToken', 'AdminWithdrawNFT', 'AdminWithdraw', 'SetAdmin', 'SetAuth', 'SetIsPaused', 'Approval', 'ApprovalForAll', 'Update']
+const IGNORE_EVENT = ['Initialized', 'AdminWithdrawToken', 'AdminWithdrawNFT', 'AdminWithdraw', 'SetAdmin', 'SetAuth', 'SetIsPaused']
 
 const util = require('util')
 const Web3 = require('web3')
@@ -87,10 +87,9 @@ async function doLoop(contractName, abi, address) {
       }
 
       // update from_block
-      let updateFromBlock = 'UPDATE `scan_config` SET `from_block` = %d WHERE `contract_address` = "%s" AND contract_name = "%s";'
-      updateFromBlock = util.format(updateFromBlock, toBlock + 1, address, contractName)
+      let updateFromBlock = 'UPDATE `scan_config` SET `from_block` = ? WHERE `contract_address` = ? AND contract_name = ?'
       process.env[contractName + address] = toBlock + 1
-      await asyncdb.exec(updateFromBlock)
+      await asyncdb.exec(updateFromBlock, [toBlock + 1, address, contractName])
     } catch (e) {
       console.error('doLoop:', e)
       await sleep(60000)
