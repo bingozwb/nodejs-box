@@ -1,23 +1,13 @@
+ENVConfig = require("../.env." + (process.env.chain || 'example'))
+
 const fs = require('fs')
 
-
-const IGNORE_ABI = []
-const IGNORE_EVENT = ['Initialized', 'AdminWithdrawToken', 'AdminWithdrawNFT', 'AdminWithdraw', 'SetAdmin', 'SetAuth', 'SetIsPaused', 'Approval', 'ApprovalForAll', 'Update']
+const IGNORE_ABI = ENVConfig.IGNORE_ABI || []
+const IGNORE_EVENT = ENVConfig.IGNORE_EVENT || []
 
 
 function genTable() {
   let str = ''
-  str = str +
-    'CREATE TABLE IF NOT EXISTS `scan_config` (\n' +
-    '  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,\n' +
-    '  `contract_name` VARCHAR(255) NOT NULL COMMENT \'合约名称\',\n' +
-    '  `contract_address` VARCHAR(255) NOT NULL COMMENT \'合约地址\',\n' +
-    '  `from_block` BIGINT UNSIGNED DEFAULT NULL COMMENT \'起始区块\',\n' +
-    '  `status` INT DEFAULT 1,\n' +
-    '  PRIMARY KEY (`id`),\n' +
-    '  UNIQUE KEY `uni_address` (`contract_address`)\n' +
-    ') ENGINE=InnoDB AUTO_INCREMENT=0;\n' +
-    '\n'
 
   try {
     const abi = require('../abi/abi.json')

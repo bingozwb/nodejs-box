@@ -37,8 +37,9 @@ exports.getConnection = async () => {
   // })
 
   try {
-    return await this.pool.getConnection()
+    return await mysql.createConnection(db_config)
   } catch (e) {
+    logger.error("Failed to get a database connection:", e)
     throw e
   }
 }
@@ -68,6 +69,7 @@ exports.exec = async (sql, values) => {
   try {
     return (await this.pool.execute(sql, values))[0]
   } catch (e) {
+    logger.error("Error executing SQL:", e)
     throw e
   }
 }
@@ -81,6 +83,7 @@ exports.query = async (sql, values) => {
   try {
     return (await this.pool.query(sql, values))[0]
   } catch (e) {
+    logger.error("Error querying database:", e)
     throw e
   }
 }

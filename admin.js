@@ -1,7 +1,3 @@
-/*
-hello express
- */
-
 ENVConfig = require('./.env.' + process.env.chain)
 
 const logger = require('./utils/log').logger
@@ -10,10 +6,10 @@ const path = require('path')
 
 const express = require('express')
 const cookieParser = require('cookie-parser')
-//中间件--用于下发session
-const session = require('express-session')
-const RedisStore = require('connect-redis').default
-const redis = require('./utils/redis')
+// // 中间件--用于下发session
+// const session = require('express-session')
+// const RedisStore = require('connect-redis').default
+// const redis = require('./utils/redis')
 
 const app = express()
 
@@ -26,21 +22,21 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, './public')))
 
-// 使用Redis存储session
-const redisStore = new RedisStore({
-  client: redis.getConnect(),
-  prefix: 'admin:',
-})
-// 启用 session 中间件
-app.use(session({
-  store: redisStore,
-  secret: 'adminwebsecret', // 相当于是一个加密密钥，值可以是任意字符串
-  resave: false, // required: force lightweight session keep alive (touch)
-  saveUninitialized: false, // recommended: only save session when data exists
-  cookie: {
-    maxAge: ENVConfig.failure_time * 1000, // 设置 session 的有效时间，单位毫秒
-  },
-}))
+// // 使用Redis存储session
+// const redisStore = new RedisStore({
+//   client: redis.getConnect(),
+//   prefix: 'admin:',
+// })
+// // 启用 session 中间件
+// app.use(session({
+//   store: redisStore,
+//   secret: 'adminwebsecret', // 相当于是一个加密密钥，值可以是任意字符串
+//   resave: false, // required: force lightweight session keep alive (touch)
+//   saveUninitialized: false, // recommended: only save session when data exists
+//   cookie: {
+//     maxAge: ENVConfig.failure_time * 1000, // 设置 session 的有效时间，单位毫秒
+//   },
+// }))
 
 const index = require('./admin/index')
 const adminTest = require('./admin/adminTest')
@@ -68,13 +64,11 @@ app.use((req, res, next) => {
   next(err)
 })
 
-console.log('env', app.get('env'))
+console.log('env', app.get('env'), '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+console.log('env', app.get('env'), '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+console.log('env', app.get('env'), '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 // global error handle
 app.use((err, req, res, next) => {
-  logger.error(req.url, err.name, err.message)
-  logger.error('err.stack', err.stack)
-  logger.error('err.status', err.status)
-
   if (res.headersSent) {
     return next(err)
   }
@@ -87,7 +81,7 @@ app.use((err, req, res, next) => {
   }
 })
 
-/** start web app */
+// start web app
 const port = ENVConfig.admin.port
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`)

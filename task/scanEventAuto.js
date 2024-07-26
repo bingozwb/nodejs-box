@@ -1,8 +1,13 @@
 ENVConfig = require("../.env." + process.env.chain)
 
 const ABI = require('../abi/abi')
-const IGNORE_ABI = []
-const IGNORE_EVENT = ['Initialized', 'AdminWithdrawToken', 'AdminWithdrawNFT', 'AdminWithdraw', 'SetAdmin', 'SetAuth', 'SetIsPaused']
+const CHAIN_ID = ENVConfig.chain_id || 0
+const IGNORE_ABI = ENVConfig.IGNORE_ABI || []
+const IGNORE_EVENT = ENVConfig.IGNORE_EVENT || []
+const AFTER_BLOCK_HEIGHT = ENVConfig.after_block_height || 0
+const BLOCK_INTERVAL_TIME = ENVConfig.block_interval_time || 5000
+const BLOCK_SCAN_GAP = ENVConfig.block_scan_gap || 1000
+const BLOCK_SCAN_DELAY = ENVConfig.block_scan_delay || 0
 
 const util = require('util')
 const Web3 = require('web3')
@@ -20,23 +25,31 @@ async function main() {
 
 async function exeScan() {
   // get scan_config
-  const selectConfig = 'SELECT * FROM `scan_config`;'
-  const result = await asyncdb.exec(selectConfig)
+  const result = await asyncdb.exec(
+    'SELECT * FROM `scan_config` WHERE chain_id = ?',
+    [CHAIN_ID])
 
-  for (value of result) {
+  for (const value of result) {
+    // check chain id
+    const chainId = value['chain_id']
+    if (CHAIN_ID !== chainId) { continue }
     // get contract name, address & abi
     const contractName = value['contract_name']
     const contractAddress = value['contract_address']
     const status = value['status']
     if (contractAddress && status && IGNORE_ABI.indexOf(contractName) < 0) {
-      const abi = ABI[contractName]
-      doLoop(contractName, abi, contractAddress).then(res => console.log('---------------------------------', contractName, contractAddress, res))
-      console.log('+++++++++++++++++++++++++++++++++', contractName, contractAddress, status)
+      doLoop(value).then(res => console.log('---------------------------------', contractName, contractAddress, res))
+      console.log('+++++++++++++++++++++++++++++++++', chainId, contractName, contractAddress, status)
     }
   }
 }
 
-async function doLoop(contractName, abi, address) {
+async function doLoop(value) {
+  const id = value['id']
+  const contractName = value['contract_name']
+  const address = value['contract_address']
+  const abi = ABI[contractName]
+
   const events = getEvents(abi)
   const contract = new web3.eth.Contract(abi, address)
 
@@ -44,20 +57,20 @@ async function doLoop(contractName, abi, address) {
     try {
       // 如果进程中没有上次已查询区块 则查询数据库
       if (!process.env[contractName + address]) {
-        let sql = 'SELECT from_block FROM scan_config WHERE contract_address = "%s" AND contract_name = "%s";'
-        sql = util.format(sql, address, contractName)
-        const result = await asyncdb.exec(sql)
+        const result = await asyncdb.exec(
+          'SELECT from_block FROM scan_config WHERE id = ?',
+          [id])
         process.env[contractName + address] = result[0]['from_block']
       }
 
       // 查詢當前最新區塊號前6个区块
       const fromBlock = parseInt(process.env[contractName + address])
-      const blockHeight = (await web3.eth.getBlockNumber()) - 6
+      const blockHeight = (await web3.eth.getBlockNumber()) - AFTER_BLOCK_HEIGHT
       if (fromBlock >= blockHeight) {
-        await sleep(5000)
+        await sleep(BLOCK_INTERVAL_TIME)
         continue
       }
-      const toBlock = Math.min(fromBlock + 1000, blockHeight)
+      const toBlock = Math.min(fromBlock + BLOCK_SCAN_GAP, blockHeight)
 
       // scan event logs
       const logs = await contract.getPastEvents('allEvents', {
@@ -77,6 +90,8 @@ async function doLoop(contractName, abi, address) {
         const tableName = fromCamel('blog_' + contractName + '_' + log.event)
         const receipt = await web3.eth.getTransactionReceipt(log.transactionHash)
         const timestamp = (await web3.eth.getBlock(log.blockNumber)).timestamp
+        // delay for rpc_url access rate limit
+        await sleep(BLOCK_SCAN_DELAY)
 
         let sql0 = genSQL(tableName, eventAbi.inputs, log, receipt, timestamp)
         // console.log(sql0)
@@ -87,9 +102,10 @@ async function doLoop(contractName, abi, address) {
       }
 
       // update from_block
-      let updateFromBlock = 'UPDATE `scan_config` SET `from_block` = ? WHERE `contract_address` = ? AND contract_name = ?'
       process.env[contractName + address] = toBlock + 1
-      await asyncdb.exec(updateFromBlock, [toBlock + 1, address, contractName])
+      await asyncdb.exec(
+        'UPDATE `scan_config` SET `from_block` = ? WHERE `id` = ?',
+        [toBlock + 1, id])
     } catch (e) {
       console.error('doLoop:', e)
       await sleep(60000)

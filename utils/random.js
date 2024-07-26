@@ -1,16 +1,38 @@
-
-function genCode(length) {
-  const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let result = '';
+function genCode (length, characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+  let result = ''
   for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    result += characters[randomIndex];
+    const randomIndex = Math.floor(Math.random() * characters.length)
+    result += characters[randomIndex]
   }
-  return result;
+  return result
+}
+
+function genCodeNum (length) {
+  const characters = '0123456789'
+  let result = ''
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length)
+    result += characters[randomIndex]
+  }
+  return result
+}
+
+function randomWeight (weights) {
+  const totalWeight = weights.reduce((acc, cur) => acc + cur, 0)
+  const randomValue = Math.random() * totalWeight
+  let currentWeight = 0
+  for (let i = 0; i < weights.length; i++) {
+    currentWeight += weights[i]
+    if (randomValue < currentWeight) {
+      return i
+    }
+  }
 }
 
 module.exports = {
-  genCode: genCode
+  genCode: genCode,
+  genCodeNum: genCodeNum,
+  randomWeight: randomWeight,
 }
 
 /*
