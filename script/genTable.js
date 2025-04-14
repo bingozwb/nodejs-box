@@ -24,15 +24,16 @@ function genTable() {
         str = str +
           'CREATE TABLE IF NOT EXISTS `' + tableName + '` (\n' +
           '  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,\n' +
+          '  `chain_id` BIGINT UNSIGNED DEFAULT 0 NOT NULL COMMENT \'链ID\',\n' +
           '  `from` VARCHAR(255) NOT NULL COMMENT \'发送地址\',\n' +
           '  `to` VARCHAR(255) NOT NULL COMMENT \'接收地址\',\n' +
           '  `value` DECIMAL(64,0) DEFAULT NULL COMMENT \'交易数量\',\n' +
           '  `transaction_hash` VARCHAR(255) NOT NULL COMMENT \'交易哈希\',\n' +
-          '  `block_number` INT UNSIGNED NOT NULL COMMENT \'区块号\',\n' +
-          '  `timestamp` INT UNSIGNED NOT NULL COMMENT \'时间戳\',\n' +
+          '  `block_number` BIGINT UNSIGNED NOT NULL COMMENT \'区块号\',\n' +
+          '  `timestamp` BIGINT UNSIGNED NOT NULL COMMENT \'时间戳\',\n' +
           '  `address` VARCHAR(255) NOT NULL COMMENT \'合约地址\',\n' +
-          '  `transaction_index` INT UNSIGNED NOT NULL COMMENT \'交易编号\',\n' +
-          '  `log_index` INT UNSIGNED NOT NULL COMMENT \'日志编号\',\n'
+          '  `transaction_index` BIGINT UNSIGNED NOT NULL COMMENT \'交易编号\',\n' +
+          '  `log_index` BIGINT UNSIGNED NOT NULL COMMENT \'日志编号\',\n'
         for (let input of item.inputs) {
           // convert to not keyword
           let fieldName = fromCamel(input.name)
